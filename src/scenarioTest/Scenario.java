@@ -1,15 +1,51 @@
 package scenarioTest;
 
 import personnages.Gaulois;
+import produit.Poisson;
+import produit.Produit;
+import produit.Sanglier;
 import villagegaulois.Etal;
+import villagegaulois.IEtal;
+import villagegaulois.IVillage;
+import villagegauloisold.DepenseMarchand;
+
 
 public class Scenario {
 
 	public static void main(String[] args) {
 
-		// TODO Partie 4 : creer de la classe anonyme Village
-
-		// fin
+		IVillage village = new IVillage() {
+			IEtal[] marche = new IEtal[10];
+			int nbEtal = 0;
+			
+			@Override
+			public <P extends Produit> boolean installerVendeur(Etal<P> etal,Gaulois vendeur, P[] produit, int prix) {
+				if (nbEtal > marche.length) return false;
+				else {
+					marche[nbEtal++] = etal;
+					etal.installerVendeur(vendeur, produit, prix);
+					return true;
+				}
+			}
+			
+			@Override
+			public DepenseMarchand[] acheterProduit(String produit, int quantiteSouhaitee) {
+				DepenseMarchand[] depenses = new DepenseMarchand[quantiteSouhaitee];
+				int id = 0;
+				int i = 0;
+				while (quantiteSouhaitee > 0 && i < nbEtal) {
+					int quantiteVendue = marche[i].contientProduit(produit, quantiteSouhaitee);
+					if (quantiteVendue >= quantiteSouhaitee) {
+						double prix = marche[i].acheterProduit(quantiteSouhaitee);
+						depenses[id] = new DepenseMarchand(marche[i].getVendeur(), quantiteVendue, produit, prix);
+						quantiteSouhaitee -= quantiteVendue;
+						i++;
+					}
+					
+				}
+				return depenses;
+			}
+		}; 
 
 		Gaulois ordralfabetix = new Gaulois("Ordralfabétix", 9);
 		Gaulois obelix = new Gaulois("Obélix", 20);
@@ -33,8 +69,6 @@ public class Scenario {
 		village.installerVendeur(etalSanglierAsterix, asterix, sangliersAsterix, 10);
 		village.installerVendeur(etalSanglierObelix, obelix, sangliersObelix, 8);
 		village.installerVendeur(etalPoisson, ordralfabetix, poissons, 5);
-
-		System.out.println(village);
 
 		DepenseMarchand[] depense = village.acheterProduit("sanglier", 3);
 
